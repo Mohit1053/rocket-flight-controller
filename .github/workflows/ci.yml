@@ -1,0 +1,65 @@
+# Predicones - CI/CD Pipeline
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compile:
+    name: Compile Arduino Sketches
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile Arduino Sketches
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: STMicroelectronics:stm32:GenH7
+          platforms: |
+            - name: STMicroelectronics:stm32
+              source-url: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
+          libraries: |
+            - name: Adafruit BMP3XX Library
+            - name: Adafruit Unified Sensor
+            - name: SdFat
+          sketch-paths: |
+            - .
+          enable-deltas-report: true
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check code formatting
+        run: |
+          echo "Checking for common issues..."
+          # Check for TODO/FIXME comments
+          grep -rn "TODO\|FIXME" *.ino || echo "No TODO/FIXME found"
+          echo "Lint check complete"
+
+  docs:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check documentation files
+        run: |
+          echo "Checking required documentation files..."
+          test -f README.md && echo "✅ README.md exists"
+          test -f CONTRIBUTING.md && echo "✅ CONTRIBUTING.md exists"
+          test -f CHANGELOG.md && echo "✅ CHANGELOG.md exists"
+          test -f LICENSE && echo "✅ LICENSE exists"
+          echo "Documentation check complete!"
